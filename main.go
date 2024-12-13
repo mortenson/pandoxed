@@ -12,11 +12,11 @@ import (
 	"time"
 )
 
-// 1MB
-const MaxFileSize = 1000000
+// 10000 bytes
+const MaxFileSize = 10000
 
-// 10 seconds
-const MaxPandocTime = 10
+// 30 seconds
+const MaxPandocTime = 30
 
 func httpError(w http.ResponseWriter, status int, message string) {
 	w.WriteHeader(status)
@@ -24,7 +24,6 @@ func httpError(w http.ResponseWriter, status int, message string) {
 }
 
 func BasicAuth(handler http.HandlerFunc, username, password, realm string) http.HandlerFunc {
-
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		user, pass, ok := r.BasicAuth()
@@ -101,8 +100,14 @@ func mdToPdf(w http.ResponseWriter, req *http.Request) {
 }
 
 func main() {
-	username := os.Getenv("BASIC_AUTH_USERNAME")
-	password := os.Getenv("BASIC_AUTH_PASWORD")
-	http.HandleFunc("/md-to-pdf", BasicAuth(mdToPdf, username, password, "Pandoxed"))
+	username, hasUsername := os.LookupEnv("BASIC_AUTH_USERNAME")
+	password, hasPassword := os.LookupEnv("BASIC_AUTH_PASWORD")
+	var handler http.HandlerFunc
+	if hasUsername && hasPassword {
+		handler = BasicAuth(mdToPdf, username, password, "Pandoxed")
+	} else {
+		handler = mdToPdf
+	}
+	http.HandleFunc("/md-to-pdf", handler)
 	http.ListenAndServe(":1337", nil)
 }
