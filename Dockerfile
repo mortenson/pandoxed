@@ -20,4 +20,6 @@ USER pandoxeduser
 
 WORKDIR /home/pandoxeduser
 
+EXPOSE 1337
+
 ENTRYPOINT ["/pandoxed"]
