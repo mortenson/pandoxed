@@ -18,6 +18,10 @@ RUN useradd -ms /bin/bash pandoxeduser
 
 USER pandoxeduser
 
+COPY fast.latex /home/pandoxeduser/fast.latex
+
+RUN luaotfload-tool -u -f
+
 WORKDIR /home/pandoxeduser
 
 EXPOSE 1337

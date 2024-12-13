@@ -81,7 +81,7 @@ func mdToPdf(w http.ResponseWriter, req *http.Request) {
 	// Exec pandoc
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(MaxPandocTime)*time.Second)
 	defer cancel()
-	cmd := exec.CommandContext(ctx, "pandoc", "--verbose", "--pdf-engine=lualatex", "-f", "markdown+raw_tex", inFile.Name(), "-o", outFile.Name())
+	cmd := exec.CommandContext(ctx, "pandoc", "--template=/home/pandoxeduser/fast.latex", "--verbose", "--pdf-engine=lualatex", "-f", "markdown+raw_tex", inFile.Name(), "-o", outFile.Name())
 	if err := cmd.Run(); err != nil {
 		httpError(w, http.StatusInternalServerError, fmt.Sprintf("pandoc err: %s", err))
 		return
