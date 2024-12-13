@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"crypto/subtle"
 	"fmt"
 	"io"
 	"log"
@@ -20,6 +21,23 @@ const MaxPandocTime = 10
 func httpError(w http.ResponseWriter, status int, message string) {
 	w.WriteHeader(status)
 	w.Write([]byte(message))
+}
+
+func BasicAuth(handler http.HandlerFunc, username, password, realm string) http.HandlerFunc {
+
+	return func(w http.ResponseWriter, r *http.Request) {
+
+		user, pass, ok := r.BasicAuth()
+
+		if !ok || subtle.ConstantTimeCompare([]byte(user), []byte(username)) != 1 || subtle.ConstantTimeCompare([]byte(pass), []byte(password)) != 1 {
+			w.Header().Set("WWW-Authenticate", `Basic realm="`+realm+`"`)
+			w.WriteHeader(401)
+			w.Write([]byte("Unauthorised.\n"))
+			return
+		}
+
+		handler(w, r)
+	}
 }
 
 func mdToPdf(w http.ResponseWriter, req *http.Request) {
@@ -83,6 +101,8 @@ func mdToPdf(w http.ResponseWriter, req *http.Request) {
 }
 
 func main() {
-	http.HandleFunc("/md-to-pdf", mdToPdf)
+	username := os.Getenv("BASIC_AUTH_USERNAME")
+	password := os.Getenv("BASIC_AUTH_PASWORD")
+	http.HandleFunc("/md-to-pdf", BasicAuth(mdToPdf, username, password, "Pandoxed"))
 	http.ListenAndServe(":1337", nil)
 }
